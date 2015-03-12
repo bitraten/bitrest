@@ -1,19 +1,18 @@
-{-# LANGUAGE DataKinds     #-}
-{-# LANGUAGE TypeOperators #-}
+module Main where
 
-import           Servant
+import           Data.ByteString.Char8      (pack)
+import           Data.IORef                 (writeIORef)
+import           Data.Pool                  (createPool)
+import           Database.PostgreSQL.Simple (close, connectPostgreSQL)
+import           Network.Wai.Handler.Warp   (runEnv)
+import           System.Environment         (getEnv)
 
-import           Model.Item (Item, Slug)
-import           Model.User (AccessToken, WithRole)
-
-
-type ItemApi = WithRole
-                :> ( "items" :> Get [Item]                              -- GET /items
-                :<|> "items" :> Capture "slug" Slug :> Get Item         -- GET /items/%slug
-                :<|> "items" :> ReqBody Item :> Post Item               -- POST /items
-                :<|> "backlinks" :> Capture "slug" Slug :> Get [Slug]   -- GET /backlinks/%slug
-                :<|> "auth" :> Post AccessToken                         -- POST /auth
-                )
+import           Api                        (api)
+import           Database                   (connPool)
 
 main :: IO ()
-main = return ()
+main = do
+    db_url <- getEnv "DATABASE_URL"
+    pool <- createPool (connectPostgreSQL $ pack db_url) close 1 10 5
+    writeIORef connPool $ Just pool
+    runEnv 8000 api
