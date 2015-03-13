@@ -1,12 +1,19 @@
-module Database(connPool, execute, query) where
+module Database(connPool, execute, query, runMigrations) where
 
-import           Control.Applicative        ((<$>))
-import           Data.Int                   (Int64)
-import           Data.IORef                 (IORef, newIORef, readIORef)
-import           Data.Maybe                 (fromJust)
-import           Data.Pool                  (Pool, withResource)
-import qualified Database.PostgreSQL.Simple as P
-import           System.IO.Unsafe           (unsafePerformIO)
+import           Control.Applicative                  ((<$>))
+import           Data.Int                             (Int64)
+import           Data.IORef                           (IORef, newIORef,
+                                                       readIORef)
+import           Data.Maybe                           (fromJust)
+import           Data.Pool                            (Pool, withResource)
+import qualified Database.PostgreSQL.Simple           as P
+import           Database.PostgreSQL.Simple.Migration (MigrationCommand (..),
+                                                       MigrationContext (..),
+                                                       MigrationResult,
+                                                       runMigration)
+import           System.IO.Unsafe                     (unsafePerformIO)
+
+import           Paths_bitrest
 
 
 connPool :: IORef (Maybe (Pool P.Connection))
@@ -22,3 +29,10 @@ query = withPool P.query
 
 execute :: (P.ToRow q) => P.Query -> q -> IO Int64
 execute = withPool P.execute
+
+runMigrations :: Pool P.Connection -> IO (MigrationResult String)
+runMigrations pool = do migrations <- getDataFileName "migrations"
+                        withResource pool (\conn -> do
+                            _ <- P.withTransaction conn $ runMigration $ MigrationContext MigrationInitialization True conn
+                            P.withTransaction conn $ runMigration $ MigrationContext (MigrationDirectory migrations) True conn
+                            )

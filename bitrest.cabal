@@ -13,6 +13,7 @@ maintainer:          rph@bitraten.de
 -- copyright:
 category:            Web
 build-type:          Simple
+data-files:          migrations/*.sql
 -- extra-source-files:
 cabal-version:       >=1.10
 
@@ -26,6 +27,7 @@ executable bitrest
                      , errors
                      , http-types
                      , postgresql-simple
+                     , postgresql-simple-migration
                      , resource-pool
                      , servant-server
                      , text
