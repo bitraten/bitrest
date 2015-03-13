@@ -20,7 +20,7 @@ import           Database.PostgreSQL.Simple.Types   (PGArray (PGArray),
 import           GHC.Generics                       (Generic)
 
 import           Database                           (execute, query)
-import           Model.User                         (Role (Guest, Member, Admin))
+import           Model.User                         (Role (..))
 
 data Visibility = Public | Family | Private
     deriving (Eq, Generic, Read, Show)
@@ -78,7 +78,7 @@ getItem role slug = do items <- liftIO $ query
 
 postItem :: Role -> Item -> EitherT (Int, String) IO Item
 postItem Admin item = liftIO $ execute
-                        "INSERT INTO items VALUES (?, ?, ?, ? :: text[], ?, ?, ? )"
+                        "INSERT INTO items (created_at, idata, slug, tags, title, itype, visibility) VALUES (?, ?, ?, ? :: text[], ?, ?, ? )"
                         item >> return item
 postItem _     _    = left (401, "unauthorized")
 

@@ -5,7 +5,7 @@
 {-# LANGUAGE TypeFamilies        #-}
 {-# LANGUAGE TypeOperators       #-}
 
-module Model.User(AuthResponse, Role (Guest, Member, Admin), User, WithRole, auth) where
+module Model.User(AuthResponse, Role (..), User, WithRole, auth) where
 
 import           Control.Error              (EitherT, left)
 import           Control.Monad              (join)
@@ -57,14 +57,14 @@ idTokenFromQuery qt = do uid <- join $ lookup "user_id" qt
 
 genToken :: Int -> IO AuthResponse
 genToken userid = do token <- query
-                        "INSERT INTO tokens VALUES (uuid_generate_v4(), ?) RETURNING access_token"
+                        "INSERT INTO tokens (access_token, user_id) VALUES (uuid_generate_v4(), ?) RETURNING access_token"
                         $ Only userid
                      return $ AuthResponse (head $ map fromOnly token) userid
 
 
 tokenRole :: Int -> UUID -> IO Role
 tokenRole userid token = do role <- query
-                                "SELECT role FROM users, tokens where id = user_id AND id = ? AND access_token = ?"
+                                "SELECT role FROM users, tokens where id = user_id AND user_id = ? AND access_token = ?"
                                 (userid, token)
                             return $ case role of
                                         [] -> Guest
