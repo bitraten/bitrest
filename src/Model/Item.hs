@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Model.Item(Item, Slug, backlinks, getItem, getItems, postItem) where
@@ -7,9 +6,6 @@ import           Control.Applicative                ((<$>), (<*>))
 import           Control.Error                      (EitherT, left, tryHead)
 import           Control.Monad                      (liftM)
 import           Control.Monad.IO.Class             (liftIO)
-import           Data.Aeson                         (FromJSON, ToJSON, Value)
-import           Data.Text                          (Text)
-import           Data.Time.Clock                    (UTCTime)
 import           Database.PostgreSQL.Simple         (In (In), Only (Only),
                                                      fromOnly)
 import           Database.PostgreSQL.Simple.FromRow (FromRow, field, fromRow)
@@ -17,34 +13,14 @@ import           Database.PostgreSQL.Simple.ToField (ToField, toField)
 import           Database.PostgreSQL.Simple.ToRow   (ToRow, toRow)
 import           Database.PostgreSQL.Simple.Types   (PGArray (PGArray),
                                                      fromPGArray)
-import           GHC.Generics                       (Generic)
 
 import           Database                           (execute, query)
+import           Model.Item.Definition              (Item (..), Slug,
+                                                     Visibility (..))
 import           Model.User                         (Role (..))
-
-data Visibility = Public | Family | Private
-    deriving (Eq, Generic, Read, Show)
-
-instance FromJSON Visibility
-instance ToJSON Visibility
 
 instance ToField Visibility where
     toField = toField . show
-
-type Slug = Text
-
-data Item = Item
-    { created_at :: UTCTime
-    , idata      :: Value -- TODO Object?
-    , slug       :: Slug
-    , tags       :: [Slug]
-    , title      :: Text
-    , itype      :: Text
-    , visibility :: Visibility
-    } deriving Generic
-
-instance FromJSON Item
-instance ToJSON Item
 
 instance FromRow Item where
     fromRow = Item <$> field <*> field <*> field <*> liftM fromPGArray field

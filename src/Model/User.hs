@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveGeneric       #-}
 {-# LANGUAGE FlexibleInstances   #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -10,34 +9,19 @@ module Model.User(AuthResponse, Role (..), User, WithRole, auth) where
 import           Control.Error              (EitherT, left)
 import           Control.Monad              (join)
 import           Control.Monad.IO.Class     (liftIO)
-import           Data.Aeson                 (FromJSON, ToJSON, toJSON)
-import           Data.Text                  (Text, unpack)
-import           Data.UUID                  (UUID, fromString, toString)
+import           Data.Text                  (unpack)
+import           Data.UUID                  (UUID, fromString)
 import           Database.PostgreSQL.Simple (Only (Only), fromOnly)
-import           GHC.Generics               (Generic)
 import           Network.HTTP.Types         (QueryText, parseQueryText)
 import           Network.Wai                (rawQueryString)
 import           Servant
 import           Text.Read                  (readMaybe)
 
 import           Database                   (query)
-
-data AuthResponse = AuthResponse {access_token :: UUID, user_id :: Int}
-    deriving Generic
-
-instance ToJSON UUID
-    where toJSON = toJSON . toString
-instance ToJSON AuthResponse
-
-data User = User {username :: Text, password :: Text}
-    deriving (Generic)
-
-instance FromJSON User
-
+import           Model.User.Definition      (AuthResponse (..), User (..),
+                                             WithRole)
 data Role = Guest | Member | Admin
     deriving Read
-
-data WithRole
 
 instance HasServer a => HasServer (WithRole :> a) where
     type Server (WithRole :> a) = Role -> Server a
