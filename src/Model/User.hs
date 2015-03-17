@@ -1,43 +1,17 @@
-{-# LANGUAGE FlexibleInstances   #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeFamilies        #-}
-{-# LANGUAGE TypeOperators       #-}
+{-# LANGUAGE OverloadedStrings #-}
 
-module Model.User(AuthResponse, Role (..), User, WithRole, auth) where
+module Model.User(AuthResponse, Role (..), User, auth, tokenRole) where
 
 import           Control.Error              (EitherT, left)
-import           Control.Monad              (join)
 import           Control.Monad.IO.Class     (liftIO)
-import           Data.Text                  (unpack)
-import           Data.UUID                  (UUID, fromString)
+import           Data.UUID                  (UUID)
 import           Database.PostgreSQL.Simple (Only (Only), fromOnly)
-import           Network.HTTP.Types         (QueryText, parseQueryText)
-import           Network.Wai                (rawQueryString)
-import           Servant
-import           Text.Read                  (readMaybe)
 
 import           Database                   (query)
-import           Model.User.Definition      (AuthResponse (..), User (..),
-                                             WithRole)
+import           Model.User.Definition      (AuthResponse (..), User (..))
+
 data Role = Guest | Member | Admin
     deriving Read
-
-instance HasServer a => HasServer (WithRole :> a) where
-    type Server (WithRole :> a) = Role -> Server a
-    route Proxy subserver request respond = do
-        let querytext = parseQueryText $ rawQueryString request
-        role <- case idTokenFromQuery querytext of
-                    Nothing      -> return Guest
-                    Just idtoken -> uncurry tokenRole idtoken
-        route (Proxy :: Proxy a) (subserver role) request respond
-
-idTokenFromQuery :: QueryText -> Maybe (Int, UUID)
-idTokenFromQuery qt = do uid <- join $ lookup "user_id" qt
-                         at  <- join $ lookup "access_token" qt
-                         user_id      <- readMaybe $ unpack uid
-                         access_token <- fromString $ unpack at
-                         return (user_id, access_token)
 
 genToken :: Int -> IO AuthResponse
 genToken userid = do token <- query

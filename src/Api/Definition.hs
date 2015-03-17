@@ -1,7 +1,7 @@
 {-# LANGUAGE DataKinds     #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Api.Definition(ItemApi, itemApi) where
+module Api.Definition(ItemApi, WithRole, itemApi) where
 
 import           Servant
 
