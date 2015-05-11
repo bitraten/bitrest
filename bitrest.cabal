@@ -29,7 +29,7 @@ executable bitrest
                      , postgresql-simple
                      , postgresql-simple-migration
                      , resource-pool
-                     , servant-server
+                     , servant-server >=0.4 && <0.5
                      , text
                      , time
                      , transformers

@@ -27,7 +27,7 @@ idTokenFromQuery qt = do uid <- join $ lookup "user_id" qt
                          return $ AuthData access_token user_id
 
 instance HasServer a => HasServer (WithRole :> a) where
-    type Server (WithRole :> a) = Role -> Server a
+    type ServerT (WithRole :> a) m = Role -> ServerT a m
     route Proxy subserver request respond = do
         let querytext = parseQueryText $ rawQueryString request
         role <- case idTokenFromQuery querytext of

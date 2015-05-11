@@ -2,7 +2,6 @@
 
 module Model.Item(Item, Slug, backlinks, getItem, getItems, postItem) where
 
-import           Control.Applicative                ((<$>), (<*>))
 import           Control.Error                      (EitherT, left, tryHead)
 import           Control.Monad                      (liftM)
 import           Control.Monad.IO.Class             (liftIO)
@@ -13,6 +12,7 @@ import           Database.PostgreSQL.Simple.ToField (ToField, toField)
 import           Database.PostgreSQL.Simple.ToRow   (ToRow, toRow)
 import           Database.PostgreSQL.Simple.Types   (PGArray (PGArray),
                                                      fromPGArray)
+import           Servant                            (ServantErr, err401, err404)
 
 import           Database                           (execute, query)
 import           Model.Item.Definition              (Item (..), Slug,
@@ -41,24 +41,24 @@ roleVis Guest  = [Public]
 roleVis Member = [Public, Family]
 roleVis Admin  = [Public, Family, Private]
 
-getItems :: Role -> EitherT (Int, String) IO [Item]
+getItems :: Role -> EitherT ServantErr IO [Item]
 getItems role = liftIO $ query
                     "SELECT * FROM items WHERE visibility IN ?"
                     (Only (In $ roleVis role))
 
-getItem :: Role -> Slug -> EitherT (Int, String) IO Item
+getItem :: Role -> Slug -> EitherT ServantErr IO Item
 getItem role slug = do items <- liftIO $ query
                             "SELECT * FROM items WHERE visibility IN ? AND slug = ?"
                             (In $ roleVis role, slug)
-                       tryHead (404, "not found") items
+                       tryHead err404 items
 
-postItem :: Role -> Item -> EitherT (Int, String) IO Item
+postItem :: Role -> Item -> EitherT ServantErr IO Item
 postItem Admin item = liftIO $ execute
                         "INSERT INTO items (created_at, idata, slug, tags, title, itype, visibility) VALUES (?, ?, ?, ? :: text[], ?, ?, ? )"
                         item >> return item
-postItem _     _    = left (401, "unauthorized")
+postItem _     _    = left err401
 
-backlinks :: Role -> Slug -> EitherT (Int, String) IO [Slug]
+backlinks :: Role -> Slug -> EitherT ServantErr IO [Slug]
 backlinks role slug = do slugs <- liftIO $ query
                             "SELECT slug FROM items WHERE visibility IN ? AND ? = ANY(tags)"
                             (In $ roleVis role, slug)

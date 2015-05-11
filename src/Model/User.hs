@@ -5,6 +5,7 @@ module Model.User(AuthData(..), Role (..), User, auth, tokenRole) where
 import           Control.Error              (EitherT, left)
 import           Control.Monad.IO.Class     (liftIO)
 import           Database.PostgreSQL.Simple (Only (Only), fromOnly)
+import           Servant                    (ServantErr, err401)
 
 import           Database                   (query)
 import           Model.User.Definition      (AuthData (..), User (..))
@@ -35,8 +36,8 @@ userID user = do uids <- query
                             [] -> Nothing
                             _  -> head $ map fromOnly uids
 
-auth :: User -> EitherT (Int, String) IO AuthData
+auth :: User -> EitherT ServantErr IO AuthData
 auth user = do mID <- liftIO $ userID user
                case mID of
-                    Nothing  -> left (401, "unauthorized")
+                    Nothing  -> left err401
                     Just uid -> liftIO $ genToken uid
