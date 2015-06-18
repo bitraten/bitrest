@@ -24,7 +24,7 @@ executable bitrest
   build-depends:       base >=4.8 && <4.9
                      , aeson
                      , bytestring
-                     , errors
+                     , either
                      , http-types
                      , postgresql-simple
                      , postgresql-simple-migration

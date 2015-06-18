@@ -2,8 +2,8 @@
 
 module Model.User(AuthData(..), Role (..), User, auth, tokenRole) where
 
-import           Control.Error              (EitherT, left)
 import           Control.Monad.IO.Class     (liftIO)
+import           Control.Monad.Trans.Either (EitherT, left)
 import           Database.PostgreSQL.Simple (Only (Only), fromOnly)
 import           Servant                    (ServantErr, err401)
 

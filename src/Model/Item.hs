@@ -2,9 +2,9 @@
 
 module Model.Item(Item, Slug, backlinks, getItem, getItems, postItem) where
 
-import           Control.Error                      (EitherT, left, tryHead)
 import           Control.Monad                      (liftM)
 import           Control.Monad.IO.Class             (liftIO)
+import           Control.Monad.Trans.Either         (EitherT, left)
 import           Database.PostgreSQL.Simple         (In (In), Only (Only),
                                                      fromOnly)
 import           Database.PostgreSQL.Simple.FromRow (FromRow, field, fromRow)
@@ -51,6 +51,8 @@ getItem role slug = do items <- liftIO $ query
                             "SELECT * FROM items WHERE visibility IN ? AND slug = ?"
                             (In $ roleVis role, slug)
                        tryHead err404 items
+                    where tryHead e []     = left e
+                          tryHead _ (i:_) = return i
 
 postItem :: Role -> Item -> EitherT ServantErr IO Item
 postItem Admin item = liftIO $ execute
