@@ -50,9 +50,9 @@ getItem :: Role -> Slug -> EitherT ServantErr IO Item
 getItem role slug = do items <- liftIO $ query
                             "SELECT * FROM items WHERE visibility IN ? AND slug = ?"
                             (In $ roleVis role, slug)
-                       tryHead err404 items
-                    where tryHead e []     = left e
-                          tryHead _ (i:_) = return i
+                       case items of
+                          []    -> left err404
+                          (i:_) -> return i
 
 postItem :: Role -> Item -> EitherT ServantErr IO Item
 postItem Admin item = liftIO $ execute
