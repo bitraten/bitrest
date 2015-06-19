@@ -18,6 +18,7 @@ import           Api.Definition     (ItemApi, WithRole, itemApi)
 import           Model.Item         (backlinks, getItem, getItems, postItem)
 import           Model.User         (AuthData (AuthData), Role (..), auth,
                                      tokenRole)
+import           View.Item          ()
 
 idTokenFromQuery :: QueryText -> Maybe AuthData
 idTokenFromQuery qt = do uid <- join $ lookup "user_id" qt
