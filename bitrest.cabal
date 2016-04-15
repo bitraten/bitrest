@@ -19,7 +19,14 @@ cabal-version:       >=1.10
 
 executable bitrest
   main-is:             Main.hs
-  -- other-modules:
+  other-modules:       Api
+                       Api.Definition
+                       Database
+                       Model.Item
+                       Model.Item.Definition
+                       Model.User
+                       Model.User.Definition
+                       Paths_bitrest
   -- other-extensions:
   build-depends:       base >=4.8 && <4.9
                      , aeson
